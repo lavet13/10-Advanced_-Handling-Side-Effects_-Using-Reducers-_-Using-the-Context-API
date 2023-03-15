@@ -1,0 +1,47 @@
+What is an effect, also called a side-effect and I will use these terms interchangeably. So when I say effect
+I mean side-effect and the other way around. But what is that? Well, let's not forget that our components in the React app
+and our React app as a whole and also especially the React library itself has one main job to render UI to react to our 
+user input, to re-render the UI when it's needed. That is what we focused on thus far with state and events and all of that.
+The main job was to bring something onto the screen and to make sure that the user may interact with that something
+and that what's shown on the screen may change based on certain events. For example, based on a button click or some text
+being entered. So therefore that's the main job of React and of our application. We wanna evaluate and render the JSX code
+in the DOM. We wanna manage state and props to make sure that every component has the data it needs and that we reflect
+the user input correctly. We wanna React to user events as mentioned and of course React is there to also re-evaluate our
+components and their JSX code and manipulate the real DOM as needed. So that's all baked into React with the tools and 
+features we learned this far. So something like useState hook, props and so on. Component is just a function therefore it's 
+execution top to bottom and everything in that function in the end deals with bringing something onto the screen and 
+with reacting to user input to clicks and so on. So that's what function is all about. We may use useState in there, we
+may have other functions in there, which for example are triggered upon a button press and so on. But everything we have
+in this component function is concerned with bringing something onto the screen.
+
+Now, therefore side-effects are everything else that might be happening in your application. And a good example here is 
+sending a HTTP-request or storing something in browser storage in local storage for example. But you could also think
+about timers or intervals. These tasks are all not related to bringing something onto the screen. At least not directly.
+Of course you might be sending a HTTP-request to then draw something onto the screen once you got the response, but sending
+the request itself and handling potential errors and so on, that's not something you need React for, that's not something
+React cares about, that's not what React is. Therefore it's not something that is related to drawing something onto the screen
+directly or anything like that. So these are therefore tasks which must happen outside of the normal component evaluation.
+So outside of your normal component function. Because you must not forget that this function, this App function for example
+is re-executed by React automatically whenever for example state changes. Whenever isLoggedIn state would change, this entire 
+function re-runs and React then basically checks what the new result of this function execution. So the new JSX code looks like
+and if compared to the previous result it should go to the real DOM and make some changes there.
+
+Now, if we would send a HTTP-request for example, directly in the component function, then we would send this request
+whenever this function re-runs. So for example, whenever this state changes and that might sometimes be what you want
+but definitely not always. And if in response to your HTTP-request you for example eventually change some state, you would
+even create an infinite loop. Because you would send the request whenever the function re-runs. And in response to your request
+you change some state which triggers this function again. So therefore such side effects should not go directly into component
+function because that would most likely create bugs, infinite loops or simply send too many HTTP-requests to stick with that
+example.
+
+Therefore we'll have a better tool for handling side effects and that's a special React Hook which we can use.
+The useEffect hook. The useEffect hook is simply another built in hook. So another function you can run inside of your
+component function that will do something special. The useEffect hook is called with two arguments, with two parameters
+
+useEffect(() => { ... }, [dependencies]);
+
+The first argument is a function that should be executed AFTER every component evaluation IF the specified dependencies changed.
+And the specified dependencies are the second argument that you pass in. That's an array full of dependencies and whenever
+such a dependency changes that first function will re-run. And therefore in that first function you can put any side effect
+code and that code will then only execute when the dependencies specified by you changed and not when the component re-renders.
+So only when your dependencies changed.
