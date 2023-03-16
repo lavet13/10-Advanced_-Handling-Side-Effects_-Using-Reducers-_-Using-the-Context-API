@@ -50,7 +50,7 @@ const Login = props => {
             <form onSubmit={submitHandler}>
                 <div
                     className={`${classes.control} ${
-                        !emailIsValid || !formIsValid ? classes.invalid : ''
+                        !emailIsValid && !formIsValid ? classes.invalid : ''
                     }`}
                 >
                     <label htmlFor="email">E-Mail</label>
@@ -64,7 +64,7 @@ const Login = props => {
                 </div>
                 <div
                     className={`${classes.control} ${
-                        !passwordIsValid || !formIsValid ? classes.invalid : ''
+                        !passwordIsValid && !formIsValid ? classes.invalid : ''
                     }`}
                 >
                     <label htmlFor="password">Password</label>
