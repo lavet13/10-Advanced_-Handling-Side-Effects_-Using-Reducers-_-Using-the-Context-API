@@ -32,10 +32,33 @@ const Login = ({ onLogin }) => {
     // the component being loaded. It could be the email address being updated. It could be anything, whenever you have an action that should be executed in
     // response to some other action that is a side effect and that is where a useEffect is able to help you.
 
+    // technique debouncing. We wanna debounce the user input.
     useEffect(() => {
-        setFormIsValid(
-            isValidEmail(enteredEmail) && isValidPassword(enteredPassword)
-        );
+        const identifier = (async () => {
+            return await new Promise(resolve => {
+                resolve(
+                    setTimeout(() => {
+                        setFormIsValid(
+                            isValidEmail(enteredEmail) &&
+                                isValidPassword(enteredPassword)
+                        );
+                    }, 500)
+                );
+            });
+        })();
+
+        // That's a so-called cleanup function. This will run as a cleanup process before useEffect executes the function.
+        // So whenever this useEffect function runs before it runs, except for the very first time when it runs, this cleanup function will run.
+        // And in addition, the cleanup function will run whenever the component you're specifying the effect in unmounts from the DOM.
+        // So whenever the component is reused. So the cleanup function runs before every new side-effect function execution and before the component
+        // is removed. And it doesn't run before the first side-effect function execution. But thereafter, it will run before every next side-effect function
+        // execution.
+        return () => {
+            console.log('clear timer');
+            (async () => {
+                clearTimeout(await identifier);
+            })();
+        };
     }, [enteredEmail, enteredPassword]);
 
     const isValidEmail = email => email.includes('@');
