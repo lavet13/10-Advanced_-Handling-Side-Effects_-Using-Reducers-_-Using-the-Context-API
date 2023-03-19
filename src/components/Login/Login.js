@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import Card from '../UI/Card/Card';
 import classes from './Login.module.css';
 import Button from '../UI/Button/Button';
 
-const Login = props => {
+const Login = ({ onLogin }) => {
     const [enteredEmail, setEnteredEmail] = useState('');
     const [emailIsValid, setEmailIsValid] = useState(true);
 
@@ -13,23 +13,40 @@ const Login = props => {
 
     const [formIsValid, setFormIsValid] = useState(false);
 
+    // useEffect & Dependencies
+
+    // we could remove dependencies array but don't save this because this would crash your page.
+    // This would run whenever this component was reevaluated. It's the same as if we wouldn't have used the useEffect hook at all.
+    // There is a simple rule you add as dependencies, what you're using in your side effect function. So in this case, we are using, the setFormIsValid
+    // function. We are using enteredEmail and we are using enteredPassword. These are three things we are using here. So therefore, here, between these
+    // brackets, you would add, setFormIsValid, enteredEmail, enteredPassword. Now actually, you can also omit setFormIsValid because those state updating
+    // function by default are insured by React to never change. So these functions will always be the same across re-render cycles, so you can omit them.
+    // Now, one aspect that could be confusing, is that of course now, inside of useEffect example, we're not working with local storage. We're not sending
+    // an HTTP request. We're not setting a timer or anything like that. Instead we're updating the React state and that could be confusing if you'll recall
+    // that slide from earlier, where I had a slightly different separation. So to clear that confusion, you must not forget, that it's called useEffect,
+    // and it has one main job, it's there to handle side effects and often side effects are HTTP requests and so on, but it's also a side effect if we
+    // listen to every keystroke and save that entered data as we're doing it in the emailChangeHandler for example and we then wanna trigger another action
+    // in response to that. So checking and updating that form validity, in response to a keystroke in the email or a password field, that is also something
+    // you could call a side effect. It's a side effect of the user entering data. So that's why this should not confuse you.
+    // useEffect in general, is a super important hook that helps you deal with code that should be executed in response to something. And something could be
+    // the component being loaded. It could be the email address being updated. It could be anything, whenever you have an action that should be executed in
+    // response to some other action that is a side effect and that is where a useEffect is able to help you.
+
+    useEffect(() => {
+        setFormIsValid(
+            isValidEmail(enteredEmail) && isValidPassword(enteredPassword)
+        );
+    }, [enteredEmail, enteredPassword]);
+
     const isValidEmail = email => email.includes('@');
     const isValidPassword = password => password.trim().length > 6;
 
     const emailChangeHandler = event => {
         setEnteredEmail(event.target.value);
-
-        setFormIsValid(
-            isValidEmail(event.target.value) && isValidPassword(enteredPassword)
-        );
     };
 
     const passwordChangeHandler = event => {
         setEnteredPassword(event.target.value);
-
-        setFormIsValid(
-            isValidPassword(event.target.value) && isValidEmail(enteredEmail)
-        );
     };
 
     const validateEmailHandler = () => {
@@ -42,7 +59,8 @@ const Login = props => {
 
     const submitHandler = event => {
         event.preventDefault();
-        props.onLogin(enteredEmail, enteredPassword);
+
+        onLogin(enteredEmail, enteredPassword);
     };
 
     return (
