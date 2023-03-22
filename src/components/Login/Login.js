@@ -1,11 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useReducer } from 'react';
 
 import Card from '../UI/Card/Card';
 import classes from './Login.module.css';
 import Button from '../UI/Button/Button';
 
+const isValidEmail = email => email.includes('@');
+const isValidPassword = password => password.trim().length > 6;
+
+const reducerHelper = (state, action, validationHandler) => {
+    switch (action.type) {
+        case 'USER_INPUT':
+            return {
+                value: action.payload,
+                isValid: validationHandler(action.payload),
+            };
+        case 'INPUT_BLUR':
+            return {
+                value: state.value,
+                isValid: validationHandler(state.value),
+            };
+        default:
+            return state;
+    }
+};
+
+const initialEmailState = { value: '', isValid: null };
+const emailReducer = (state, action) =>
+    reducerHelper(state, action, isValidEmail);
+
+const initialPasswordState = { value: '', isValid: null };
+const passwordReducer = (state, action) =>
+    reducerHelper(state, action, isValidPassword);
+
 const Login = ({ onLogin }) => {
     // Introducing useReducer & Reducers in General
+
     // Here, we managing a couple of states snapshots, and you might be able to spot some related state here.
     // We managed the enteredEmail and the enteredPassword, but then we also managed the fact or the question
     // the response to the question, whether the email or the password is valid. And we managed the overall
@@ -57,13 +86,22 @@ const Login = ({ onLogin }) => {
     // You could do it with the useState, but in such cases when your state becomes more complex, bigger and combines multiple
     // related states, useReducer can also be worth a closer look.
 
-    const [enteredEmail, setEnteredEmail] = useState('');
-    const [emailIsValid, setEmailIsValid] = useState(true);
+    // const [enteredEmail, setEnteredEmail] = useState('');
+    // const [emailIsValid, setEmailIsValid] = useState(true);
 
-    const [enteredPassword, setEnteredPassword] = useState('');
-    const [passwordIsValid, setPasswordIsValid] = useState(true);
+    const [emailState, dispatchEmail] = useReducer(
+        emailReducer,
+        initialEmailState
+    );
 
-    const [formIsValid, setFormIsValid] = useState(false);
+    // const [enteredPassword, setEnteredPassword] = useState('');
+    // const [passwordIsValid, setPasswordIsValid] = useState(true);
+    const [passwordState, dispatchPassword] = useReducer(
+        passwordReducer,
+        initialPasswordState
+    );
+
+    const [formIsValid, setFormIsValid] = useState(null);
 
     // useEffect & Dependencies
 
@@ -85,6 +123,8 @@ const Login = ({ onLogin }) => {
     // response to some other action that is a side effect and that is where a useEffect is able to help you.
 
     // technique debouncing. We wanna debounce the user input.
+
+    /*
     useEffect(() => {
         const identifier = (async () => {
             return await new Promise(resolve => {
@@ -113,6 +153,7 @@ const Login = ({ onLogin }) => {
             })();
         };
     }, [enteredEmail, enteredPassword]);
+    */
 
     // useEffect Summary
 
@@ -141,37 +182,38 @@ const Login = ({ onLogin }) => {
     // is removed from the DOM, we will see EFFECT CLEANUP. So that's how useEffect works, and how the different parts of it are related, and when they
     // execute.
 
+    // useEffect(() => {
+    //     console.log('EFFECT RUNNING 2');
+
+    //     return () => {
+    //         console.log('EFFECT CLEANUP 2');
+    //     };
+    // }, []);
+
     useEffect(() => {
-        console.log('EFFECT RUNNING 2');
-
-        return () => {
-            console.log('EFFECT CLEANUP 2');
-        };
-    }, []);
-
-    const isValidEmail = email => email.includes('@');
-    const isValidPassword = password => password.trim().length > 6;
+        setFormIsValid(emailState.isValid && passwordState.isValid);
+    }, [emailState.isValid, passwordState.isValid]);
 
     const emailChangeHandler = event => {
-        setEnteredEmail(event.target.value);
+        dispatchEmail({ type: 'USER_INPUT', payload: event.target.value });
     };
 
     const passwordChangeHandler = event => {
-        setEnteredPassword(event.target.value);
+        dispatchPassword({ type: 'USER_INPUT', payload: event.target.value });
     };
 
     const validateEmailHandler = () => {
-        setEmailIsValid(isValidEmail(enteredEmail));
+        dispatchEmail({ type: 'INPUT_BLUR' });
     };
 
     const validatePasswordHandler = () => {
-        setPasswordIsValid(isValidPassword(enteredPassword));
+        dispatchPassword({ type: 'INPUT_BLUR' });
     };
 
     const submitHandler = event => {
         event.preventDefault();
 
-        onLogin(enteredEmail, enteredPassword);
+        onLogin(emailState.value, passwordState.value);
     };
 
     return (
@@ -179,28 +221,32 @@ const Login = ({ onLogin }) => {
             <form onSubmit={submitHandler}>
                 <div
                     className={`${classes.control} ${
-                        !emailIsValid && !formIsValid ? classes.invalid : ''
+                        emailState.isValid === false && !formIsValid
+                            ? classes.invalid
+                            : ''
                     }`}
                 >
                     <label htmlFor="email">E-Mail</label>
                     <input
                         type="email"
                         id="email"
-                        value={enteredEmail}
+                        value={emailState.value}
                         onChange={emailChangeHandler}
                         onBlur={validateEmailHandler}
                     />
                 </div>
                 <div
                     className={`${classes.control} ${
-                        !passwordIsValid && !formIsValid ? classes.invalid : ''
+                        passwordState.isValid === false && !formIsValid
+                            ? classes.invalid
+                            : ''
                     }`}
                 >
                     <label htmlFor="password">Password</label>
                     <input
                         type="password"
                         id="password"
-                        value={enteredPassword}
+                        value={passwordState.value}
                         onChange={passwordChangeHandler}
                         onBlur={validatePasswordHandler}
                     />

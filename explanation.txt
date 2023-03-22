@@ -57,3 +57,76 @@ useReducer() can be used as a replacement for useState() if you need "more power
 mean that you should always use useReducer because it's more powerful, so it's always better. No, because it's also a bit 
 more complex to use, it requires a bit more setup. So for a lot of scenarios for the majority I would argue you probably use
 useState. But there are cases where the extra work of getting useReducer to work, is just worth it.
+
+# Using the useReducer() hook
+const [state, dispatchFn] = useReducer(reducerFn, initialState, initFn);
+useReducer just like useState always returns an array with exactly two values. And therefore you can use array destructuring
+as we did it with useState to pull out these values and store them in separate constants.
+First value: latest state snapshot, because it's a state management mechanism like useState.
+Second value: function that allows you to update that state snapshot.
+
+So that's kind of the same as for useState, though the state updating function will work differently.
+Instead of just setting a new state value, you will dispatch an action. And that action will be consumed by the first
+argument you pass to useReducer a so-called reducer function(reducerFn).
+
+# reducerFn
+So reducer function gets the latest state snapshop automatically because this function will be called by React
+AND it gets the action that was dispatched. Because React will call this reducer function whenever a new action is dispatched
+(via dispatchFn). 
+Now, the reducer function then also should do one important thing. It should return a new updated state. So it's a bit like
+the function form of the useState hook, but an extended version of that, you could say, because of that action thing, which
+you'll see in action, no pun intended, in a second.
+
+In addition, you can also set some initial state(initialState) and also an initial function(initFn) that should run to set
+the initial state in case your initial state is a bit more complex. And, for example, the result of let's say HTTP requests
+or anything like that. We'll ignore that for now. So that's useReducer in theory.
+
+useReducer - это React-хук, который предоставляет более мощный способ управления состоянием в компонентах, чем useState. Он предоставляет способ управления состоянием, основанный на действиях (actions) вместо прямого изменения состояния.
+
+Синтаксис useReducer выглядит следующим образом:
+
+javascript
+Copy code
+const [state, dispatch] = useReducer(reducer, initialState);
+где state - текущее состояние, dispatch - функция, которая позволяет отправлять действия (actions) для изменения состояния, reducer - функция, которая принимает текущее состояние и действие, и возвращает новое состояние, а initialState - начальное состояние.
+
+reducer должен быть чистой функцией, которая не изменяет свой входной аргумент и возвращает новое состояние в зависимости от типа действия. Действия (actions) - это объекты, которые содержат тип и (необязательно) данные для обновления состояния. Пример действия:
+
+javascript
+Copy code
+{ type: 'INCREMENT', payload: 1 }
+где type - строка, определяющая тип действия, и payload - данные, связанные с действием.
+
+Пример использования useReducer:
+
+javascript
+Copy code
+import React, { useReducer } from 'react';
+
+const initialState = { count: 0 };
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'INCREMENT':
+      return { count: state.count + action.payload };
+    case 'DECREMENT':
+      return { count: state.count - action.payload };
+    default:
+      return state;
+  }
+}
+
+function Counter() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  return (
+    <div>
+      <p>Count: {state.count}</p>
+      <button onClick={() => dispatch({ type: 'INCREMENT', payload: 1 })}>Increment</button>
+      <button onClick={() => dispatch({ type: 'DECREMENT', payload: 1 })}>Decrement</button>
+    </div>
+  );
+}
+Этот компонент Counter использует useReducer для управления состоянием счетчика. Он передает начальное состояние и функцию редуктора reducer в useReducer, а затем использует dispatch для отправки действий для изменения состояния.
+
+useReducer может использоваться для управления более сложными состояниями и обработки нескольких типов действий. Например, он может использоваться для управления формой, где действия могут быть отправкой данных, изменением поля ввода и т.д.
