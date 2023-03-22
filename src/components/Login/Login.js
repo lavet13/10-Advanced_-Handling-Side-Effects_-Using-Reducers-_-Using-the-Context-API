@@ -196,24 +196,9 @@ const Login = ({ onLogin }) => {
     const { isValid: passwordIsValid } = passwordState;
 
     useEffect(() => {
-        const identifier = (async () => {
-            return await new Promise(resolve => {
-                resolve(
-                    setTimeout(() => {
-                        setFormIsValid(emailIsValid && passwordIsValid);
-                    }, 500)
-                );
-            });
-        })();
+        setFormIsValid(emailIsValid && passwordIsValid);
 
         console.log('EFFECT RUNNING');
-
-        return () => {
-            console.log('CLEANUP');
-            (async () => {
-                clearTimeout(await identifier);
-            })();
-        };
     }, [emailIsValid, passwordIsValid]);
 
     const emailChangeHandler = event => {
