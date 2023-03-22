@@ -14,11 +14,13 @@ const reducerHelper = (state, action, validationHandler) => {
                 value: action.payload,
                 isValid: validationHandler(action.payload),
             };
+
         case 'INPUT_BLUR':
             return {
                 value: state.value,
                 isValid: validationHandler(state.value),
             };
+
         default:
             return state;
     }
@@ -190,9 +192,29 @@ const Login = ({ onLogin }) => {
     //     };
     // }, []);
 
+    const { isValid: emailIsValid } = emailState;
+    const { isValid: passwordIsValid } = passwordState;
+
     useEffect(() => {
-        setFormIsValid(emailState.isValid && passwordState.isValid);
-    }, [emailState.isValid, passwordState.isValid]);
+        const identifier = (async () => {
+            return await new Promise(resolve => {
+                resolve(
+                    setTimeout(() => {
+                        setFormIsValid(emailIsValid && passwordIsValid);
+                    }, 500)
+                );
+            });
+        })();
+
+        console.log('EFFECT RUNNING');
+
+        return () => {
+            console.log('CLEANUP');
+            (async () => {
+                clearTimeout(await identifier);
+            })();
+        };
+    }, [emailIsValid, passwordIsValid]);
 
     const emailChangeHandler = event => {
         dispatchEmail({ type: 'USER_INPUT', payload: event.target.value });
@@ -235,6 +257,7 @@ const Login = ({ onLogin }) => {
                         onBlur={validateEmailHandler}
                     />
                 </div>
+
                 <div
                     className={`${classes.control} ${
                         passwordState.isValid === false && !formIsValid
@@ -251,6 +274,7 @@ const Login = ({ onLogin }) => {
                         onBlur={validatePasswordHandler}
                     />
                 </div>
+
                 <div className={classes.actions}>
                     <Button
                         type="submit"
