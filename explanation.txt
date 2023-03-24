@@ -69,7 +69,6 @@ So that's kind of the same as for useState, though the state updating function w
 Instead of just setting a new state value, you will dispatch an action. And that action will be consumed by the first
 argument you pass to useReducer a so-called reducer function(reducerFn).
 
-# reducerFn
 So reducer function gets the latest state snapshop automatically because this function will be called by React
 AND it gets the action that was dispatched. Because React will call this reducer function whenever a new action is dispatched
 (via dispatchFn). 
@@ -81,7 +80,61 @@ In addition, you can also set some initial state(initialState) and also an initi
 the initial state in case your initial state is a bit more complex. And, for example, the result of let's say HTTP requests
 or anything like that. We'll ignore that for now. So that's useReducer in theory.
 
-useReducer - это React-хук, который предоставляет более мощный способ управления состоянием в компонентах, чем useState. Он предоставляет способ управления состоянием, основанный на действиях (actions) вместо прямого изменения состояния.
+# Introducing useReducer & Reducers in General
+
+Here, we managing a couple of states snapshots, and you might be able to spot some related state here.
+We managed the enteredEmail and the enteredPassword, but then we also managed the fact or the question
+the response to the question, whether the email or the password is valid. And we managed the overall
+form validity. So you could argue that overall, this is all one big state that describes the overall
+form state. The inputs are part of that, or you at least treat every input as one entity and one state,
+which simply has two aspects. The value the user entered and the validity of that input.
+And it becomes clear that we have some work to do and some redundancy if we consider the fact that
+we're setting the overall form validity, by checking the validity of email and password when we're
+doing the exact same thing for our two validate handlers. Now, we could re-write this in various ways
+and for example, use our emailIsValid and passwordIsValid states in the useEffect hook and just use those
+two states to confirm whether the overall form is valid and that it would work. But nonetheless,
+we at least have these two states, the enteredEmail and the validity of the email that clearly kind of belong
+together, and which we therefore might wanna manage together. In addition, I wanna come back to something
+which we don't have anymore because we're using useEffect, but what we had before you might remember that
+inside of emailChangeHandler and passwordChangeHandler, we had a slightly different code. That approach also
+worked but we had some code re-usage which is why the useEffect was a better result. But let's say for
+whatever reason you don't wanna take the route to useEffect. In that case, you would have another problem
+and I'm just going back to the solution to show you this problem which you can have in some apps and in some
+use cases. For example, we are updating some state the form validity state, based on two other states.
+Now, what did you learn about updating the state based on some older state? You wanna use the function form.
+Now, that doesn't work however, because that's only true if your next state update, depends on the previous
+state snapshot of the same state. But here we depend on two other states snapshots of different state of
+the enteredEmail and the enteredPassword, not on the last state snapshot of the form validity.
+So therefore here actually we're doing something which you normally shouldn't do, because the way React
+schedules state updates,
+this code "setFormIsValid(event.target.value.includes('@') && enteredPassword.trim().length > 6)"
+could actually in rare cases, but it could actually lead to the scenario
+where "setFormIsValid(event.target.value.includes('@') && enteredPassword.trim().length > 6)" runs before, for example,
+password state update was processed. So therefore enteredPassword when this
+"setFormIsValid(event.target.value.includes('@') && enteredPassword.trim().length > 6)" code runs,
+might not contain the latest enteredPassword, because of how React schedules state updates.
+That's why I said before, and why I urged you to use the function form.
+But again, it's not available here, because we're depending on two other states and not the last snapshot of this form
+validity state. This is another scenario where you could use useReducer. So it's a good use case, a good replacement
+of the useState. When you have states that belongs together, for example, enteredEmail and the validity
+of the email's value or if you have state updates that depend on other state.
+We already violate this rule of using the function form if a state update depends on an older state.
+Here in our validateEmail and validatePassword handlers. There, we are calling setEmailIsValid and setPasswordIsValid
+to set new states, for this emailIsValid and passwordIsValid state. Now, how are we setting these states? Well, by
+having a look at another state and calling a method on it. (example: enteredEmail.includes('@')). We're having a look
+at the enteredEmail state, which is a different state. Sure, they are related. They both changed because of what
+the user entered, but technically these are two different states, two different variables. And we are deriving(выводим)
+our new emailIsValid state by looking at another state and that is something we should not do.
+It works in most cases, but in some scenarios it could not work because maybe some state update for enteredEmail
+wasn't processed in time. And then we would try to update emailIsValid, based on some outdated enteredEmail state.
+That is a scenario where useReducer is always a good choice. If you update a state, which depends on different state
+then merging this into one state could be a good idea. And you can do that without useReducer as well. You could
+simply manage an email state, which is an object with the value and the valid being part of the same object.
+You could do it with the useState, but in such cases when your state becomes more complex, bigger and combines multiple
+related states, useReducer can also be worth a closer look.
+
+
+# useReducer - это React-хук, который предоставляет более мощный способ управления состоянием в компонентах, чем useState. Он предоставляет способ управления состоянием, основанный на действиях (actions) вместо прямого изменения состояния.
 
 Синтаксис useReducer выглядит следующим образом:
 
@@ -130,3 +183,98 @@ function Counter() {
 Этот компонент Counter использует useReducer для управления состоянием счетчика. Он передает начальное состояние и функцию редуктора reducer в useReducer, а затем использует dispatch для отправки действий для изменения состояния.
 
 useReducer может использоваться для управления более сложными состояниями и обработки нескольких типов действий. Например, он может использоваться для управления формой, где действия могут быть отправкой данных, изменением поля ввода и т.д.
+
+
+# useEffect & Dependencies
+
+we could remove dependencies array but don't save this because this would crash your page.
+This would run whenever this component was reevaluated. It's the same as if we wouldn't have used the useEffect hook at all.
+There is a simple rule you add as dependencies, what you're using in your side effect function. So in this case, we are using, the setFormIsValid
+function. We are using enteredEmail and we are using enteredPassword. These are three things we are using here. So therefore, here, between these
+brackets, you would add, setFormIsValid, enteredEmail, enteredPassword. Now actually, you can also omit setFormIsValid because those state updating
+function by default are insured by React to never change. So these functions will always be the same across re-render cycles, so you can omit them.
+Now, one aspect that could be confusing, is that of course now, inside of useEffect example, we're not working with local storage. We're not sending
+an HTTP request. We're not setting a timer or anything like that. Instead we're updating the React state and that could be confusing if you'll recall
+that slide from earlier, where I had a slightly different separation. So to clear that confusion, you must not forget, that it's called useEffect,
+and it has one main job, it's there to handle side effects and often side effects are HTTP requests and so on, but it's also a side effect if we
+listen to every keystroke and save that entered data as we're doing it in the emailChangeHandler for example and we then wanna trigger another action
+in response to that. So checking and updating that form validity, in response to a keystroke in the email or a password field, that is also something
+you could call a side effect. It's a side effect of the user entering data. So that's why this should not confuse you.
+useEffect in general, is a super important hook that helps you deal with code that should be executed in response to something. And something could be
+the component being loaded. It could be the email address being updated. It could be anything, whenever you have an action that should be executed in
+response to some other action that is a side effect and that is where a useEffect is able to help you.
+
+
+# useEffect Summary
+
+Rarely used, because it runs when the component first mounts, when component is rendered for the first time, but then also for every state update.
+We learned that the effect function runs AFTER every component render cycle. Not before it and not during it, but AFTER it, including the first time
+this component was mounted.
+  useEffect(() => {
+    console.log('EFFECT RUNNING');
+  });
+
+Now, this changes once we add an empty array. Now this function here, only executes for the first time this component
+was mounted and rendered, but not thereafter, not for any subsequent rerender cycle. So it really only ran once.
+  useEffect(() => {
+    console.log('EFFECT RUNNING');
+  }, []);
+
+Alternatively, we add a dependency like enteredEmail or enteredPassword. Now this function here, reruns whenever the component was re-evaluated only IF
+dependencies were changed.
+  useEffect(() => {
+    console.log('EFFECT RUNNING');
+  }, [enteredPassword]);
+
+We also have a cleanup function, which we can return. This cleanup function runs before this effect function, but not before
+the first time(not in my case) it runs. Now, if we had an empty array here, so no dependencies, we learned that we only see
+effect running once, and the cleanup function in this case, would run when the component is removed. So in this case, when I log in and the component
+is removed from the DOM, we will see EFFECT CLEANUP. So that's how useEffect works, and how the different parts of it are related, and when they
+execute.
+
+useEffect(() => {
+    console.log('EFFECT RUNNING 2');
+
+    return () => {
+      console.log('EFFECT CLEANUP 2');
+    };
+}, []);
+
+# useReducer vs useState for State Management
+Generally, you will know when you need useReducer. That might not be the greatest rule of all times, but you will see when
+you need useReducer, for example, because using useState becomes too cumbersome, you find yourself dealing with a lot of kind
+of related state snapshots, which still are kind of independent and you start updating them together in a way that just doesn't
+work out. Then, you want to consider using useReducer.
+
+useState:
+1) The main state management "tool".
+2) It's great for independent pieces of state and data. 
+3) It's great if state updates are easy and limited to a few kinds of updates. So if you don't have a lot of different cases
+that will change a state and especially if you don't have, let's say, an object as a state or anything like that.
+
+useReducer:
+1) Great if you need "more power"
+Now, if you do have an object as a state or a more complex state useReducer might be interesting because, in general, 
+useReducer is great if you need more power and with more power, I simply mean that you can write such a reducer function
+that can contain more complex state updating logic where you always are guaranteed to work with the latest state snapshot.
+And where you can move that potentially more complex logic out of your component function body into a separate reducer function.
+So, also to restructure code, that might be interesting.
+
+2) Should be considered if you have related pieces of state/data
+You should especially consider useReducer, if you're dealing with related data, with state that is made up of related pieces
+of state. So when you, for example, have a scenario, as we had it with our form input state. 
+
+3) Can be helpful if you have more complex state updates
+And, in general, useReducer can be helpful if you have more complex state updates, if you have different cases, 
+different actions that can change a state, cases like this.
+
+Now, there is no hard rule and there, as always in programming, is no clear wrong or right. You can certainly also handle cases
+where useReducer would be good with just useState, especially when combining that with useEffect.
+But sometimes using useReducer just might be more elegant, or simpler. On the other hand, you should absolutely not always
+useReducer because often that will be overkill. If you have just a simple state that just switches between two different values.
+Using useReducer might be overkill.
+
+Now, you could absolutely also use useReducer to manage the form state as a whole with useReducer, instead of using useState
+for form validity, you could replace these two reducers and the form validity with one big reducer that manages the entire form
+but that's something I will come back to later in the form's module. Since, for now, it's just important that you understand
+useReducer and when to use it.
