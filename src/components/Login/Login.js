@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useReducer } from 'react';
+import React, { useState, useEffect, useReducer, useContext } from 'react';
 
 import Card from '../UI/Card/Card';
 import classes from './Login.module.css';
 import Button from '../UI/Button/Button';
+import AuthContext from '../../context/auth-context';
 
 const isValidEmail = email => email.includes('@');
 const isValidPassword = password => password.trim().length > 6;
@@ -34,7 +35,8 @@ const initialPasswordState = { value: '', isValid: null };
 const passwordReducer = (state, action) =>
     reducerHelper(state, action, isValidPassword);
 
-const Login = ({ onLogin }) => {
+const Login = () => {
+    const { onLogin } = useContext(AuthContext);
     // const [enteredEmail, setEnteredEmail] = useState('');
     // const [emailIsValid, setEmailIsValid] = useState(true);
 
@@ -126,10 +128,10 @@ const Login = ({ onLogin }) => {
                             : ''
                     }`}
                 >
-                    <label htmlFor="email">E-Mail</label>
+                    <label htmlFor='email'>E-Mail</label>
                     <input
-                        type="email"
-                        id="email"
+                        type='email'
+                        id='email'
                         value={emailState.value}
                         onChange={emailChangeHandler}
                         onBlur={validateEmailHandler}
@@ -143,10 +145,10 @@ const Login = ({ onLogin }) => {
                             : ''
                     }`}
                 >
-                    <label htmlFor="password">Password</label>
+                    <label htmlFor='password'>Password</label>
                     <input
-                        type="password"
-                        id="password"
+                        type='password'
+                        id='password'
                         value={passwordState.value}
                         onChange={passwordChangeHandler}
                         onBlur={validatePasswordHandler}
@@ -154,11 +156,7 @@ const Login = ({ onLogin }) => {
                 </div>
 
                 <div className={classes.actions}>
-                    <Button
-                        type="submit"
-                        className={classes.btn}
-                        disabled={!formIsValid}
-                    >
+                    <Button type='submit' disabled={!formIsValid}>
                         Login
                     </Button>
                 </div>
