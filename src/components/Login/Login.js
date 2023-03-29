@@ -1,9 +1,16 @@
-import React, { useState, useEffect, useReducer, useContext } from 'react';
+import React, {
+    useState,
+    useEffect,
+    useReducer,
+    useContext,
+    useRef,
+} from 'react';
 
 import Card from '../UI/Card/Card';
 import classes from './Login.module.css';
 import Button from '../UI/Button/Button';
 import AuthContext from '../../context/auth-context';
+import Input from '../UI/Input/Input';
 
 const isValidEmail = email => email.includes('@');
 const isValidPassword = password => password.trim().length > 6;
@@ -53,6 +60,9 @@ const Login = () => {
     );
 
     const [formIsValid, setFormIsValid] = useState(null);
+
+    const emailInputRef = useRef();
+    const passwordInputRef = useRef();
 
     // technique debouncing. We wanna debounce the user input.
 
@@ -115,50 +125,45 @@ const Login = () => {
     const submitHandler = event => {
         event.preventDefault();
 
-        onLogin(emailState.value, passwordState.value);
+        if (formIsValid) {
+            onLogin(emailState.value, passwordState.value);
+        } else if (!emailIsValid) {
+            emailInputRef.current.focus();
+            console.log(emailInputRef);
+        } else {
+            passwordInputRef.current.focus();
+            console.log(passwordInputRef);
+        }
     };
 
     return (
         <Card className={classes.login}>
             <form onSubmit={submitHandler}>
-                <div
-                    className={`${classes.control} ${
-                        emailState.isValid === false && !formIsValid
-                            ? classes.invalid
-                            : ''
-                    }`}
-                >
-                    <label htmlFor='email'>E-Mail</label>
-                    <input
-                        type='email'
-                        id='email'
-                        value={emailState.value}
-                        onChange={emailChangeHandler}
-                        onBlur={validateEmailHandler}
-                    />
-                </div>
-
-                <div
-                    className={`${classes.control} ${
-                        passwordState.isValid === false && !formIsValid
-                            ? classes.invalid
-                            : ''
-                    }`}
-                >
-                    <label htmlFor='password'>Password</label>
-                    <input
-                        type='password'
-                        id='password'
-                        value={passwordState.value}
-                        onChange={passwordChangeHandler}
-                        onBlur={validatePasswordHandler}
-                    />
-                </div>
+                <Input
+                    ref={emailInputRef}
+                    label="E-mail"
+                    id="e-mail"
+                    type="email"
+                    value={emailState.value}
+                    isValid={emailIsValid}
+                    formIsValid={formIsValid}
+                    onChange={emailChangeHandler}
+                    onBlur={validateEmailHandler}
+                />
+                <Input
+                    ref={passwordInputRef}
+                    label="Password"
+                    id="password"
+                    type="password"
+                    value={passwordState.value}
+                    isValid={passwordIsValid}
+                    formIsValid={formIsValid}
+                    onChange={passwordChangeHandler}
+                    onBlur={validatePasswordHandler}
+                />
 
                 <div className={classes.actions}>
-                    <Button type='submit' disabled={!formIsValid}>
-                        Login
-                    </Button>
+                    <Button type="submit">Login</Button>
                 </div>
             </form>
         </Card>
